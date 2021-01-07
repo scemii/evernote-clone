@@ -6,9 +6,10 @@ import firebase from "./firebase";
 
 function App() {
   const [notes, setNotes] = useState(null);
-  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [addingNote, setAddingNote] = useState(false);
   const [title, setTitle] = useState(null);
+  const [keyVariation, setkeyVariation] = useState(null);
 
   const updateNote = async (id, value) => {
     await firebase.firestore().collection("notes").doc(id).update({
@@ -28,6 +29,8 @@ function App() {
 
   const deleteNote = async (id) => {
     await firebase.firestore().collection("notes").doc(id).delete();
+    setSelectedIndex(0);
+    setkeyVariation(Math.random());
   };
 
   const addNewNote = () => {
@@ -35,13 +38,12 @@ function App() {
     setTitle(null);
   };
 
-  const newNote = (e) => {
+  const newNote = async (e) => {
     e.preventDefault();
-    firebase.firestore().collection("notes").add({
+    await firebase.firestore().collection("notes").add({
       title,
       body: "",
     });
-
     setAddingNote(!addingNote);
   };
 
@@ -57,9 +59,8 @@ function App() {
         setNotes(data);
         console.log(data);
       });
-
     return () => unsubscribe();
-  }, []);
+  }, [addingNote]);
 
   return (
     <div className="App">
@@ -76,19 +77,14 @@ function App() {
           setAddingNote={setAddingNote}
           updateTitle={updateTitle}
         />
-        {notes && notes.length > 0 ? (
+        {!addingNote && notes && notes.length > 0 ? (
           <TextEditor
+            key={keyVariation}
             note={notes[selectedIndex]}
             updateNote={updateNote}
             selectedIndex={selectedIndex}
           />
-        ) : (
-          <TextEditor
-            note={{ body: "" }}
-            updateNote={updateNote}
-            selectedIndex={selectedIndex}
-          />
-        )}
+        ) : null}
       </div>
     </div>
   );
